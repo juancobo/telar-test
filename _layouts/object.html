@@ -1,0 +1,529 @@
+---
+layout: default
+---
+
+{% assign lang = site.data.languages[site.telar_language] | default: site.data.languages.en %}
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+
+<div class="container my-5">
+  <div class="row">
+    <div class="col-12">
+      <a href="{{ '/objects/' | relative_url }}" class="btn btn-sm btn-outline-secondary mb-3">
+        ← Back to Collection
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Object Viewer -->
+    <div class="col-lg-8">
+      {% if page.object_warning and page.object_warning != "" %}
+      <div class="alert alert-danger mb-3" role="alert">
+        <strong>⚠️ Image Viewer Unavailable</strong>
+        <p class="mb-0 mt-2">{{ page.object_warning | markdownify | remove: '<p>' | remove: '</p>' | strip }}</p>
+      </div>
+      {% endif %}
+
+      <div id="object-viewer"></div>
+
+      <!-- Coordinate Tools Button -->
+      {% if page.object_id %}
+      <div class="mt-3">
+        <div id="coordinateButton">
+          <button class="btn btn-developer btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#coordinatePanel" aria-expanded="false">
+            <i class="bi bi-search"></i> Identify coordinates
+          </button>
+        </div>
+
+        <!-- Collapsible Coordinate Panel -->
+        <div class="collapse" id="coordinatePanel">
+          <div class="card coordinate-panel">
+            <div class="card-body coordinate-panel-body">
+              <!-- Close Button -->
+              <button type="button" class="btn-close coordinate-panel-close" data-bs-toggle="collapse" data-bs-target="#coordinatePanel"></button>
+
+              <div class="row coordinate-panel-row">
+                <!-- Instructions -->
+                <div class="col-md-6">
+                  <div class="coordinate-panel-instructions">
+                    <h6 class="coordinate-panel-heading">{{ lang.object.coordinates.heading | default: "Instructions" }}</h6>
+                    <p>
+                      {{ lang.object.coordinates.instructions_p1 | default: "Use this panel to identify the coordinates of locations in an image for your story. Coordinates update as you pan/zoom the image above with your mouse by clicking, dragging, and scrolling." }}
+                    </p>
+                    <p class="mb-0 coord-instructions-single">
+                      {{ lang.object.coordinates.instructions_p2 | default: "Once you identify a location make a note of the X, Y, and Zoom values, so you can include them in your structure spreadsheet. You can also press the buttons to the right to copy all three coordinates at once." }}
+                    </p>
+                    <p class="mb-0 coord-instructions-multi" style="display: none;">
+                      {{ lang.object.coordinates.instructions_p2_multi | default: "Once you identify a location make a note of the X, Y, Zoom, and Page values, so you can include them in your structure spreadsheet. You can also press the buttons to the right to copy all four values at once." }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Current Coordinates Table and Buttons -->
+                <div class="col-md-6">
+                  <div class="coordinate-panel-values">
+                    <div class="coordinate-panel-values-inner">
+                      <dl class="row mb-0">
+                        <dt class="col-sm-6 coord-page-row coord-label">{{ lang.object.coordinates.page_label | default: "Page" }}</dt>
+                        <dd class="col-sm-6 coord-page-row coord-field">
+                          <code id="coord-page">1</code>
+                          <button class="btn btn-sm coord-copy-btn" id="copy-page" title="{{ lang.object.coordinates.copy_page_tooltip | default: 'Copy page number' }}">
+                            <i class="bi bi-clipboard"></i>
+                          </button>
+                        </dd>
+
+                        <dt class="col-sm-6 coord-label">X</dt>
+                        <dd class="col-sm-6 coord-field">
+                          <code id="coord-x">0.500</code>
+                          <button class="btn btn-sm coord-copy-btn" id="copy-x" title="Copy X coordinate">
+                            <i class="bi bi-clipboard"></i>
+                          </button>
+                        </dd>
+
+                        <dt class="col-sm-6 coord-label">Y</dt>
+                        <dd class="col-sm-6 coord-field">
+                          <code id="coord-y">0.500</code>
+                          <button class="btn btn-sm coord-copy-btn" id="copy-y" title="Copy Y coordinate">
+                            <i class="bi bi-clipboard"></i>
+                          </button>
+                        </dd>
+
+                        <dt class="col-sm-6 coord-label">Zoom</dt>
+                        <dd class="col-sm-6 coord-field">
+                          <code id="coord-zoom">1.0</code>
+                          <button class="btn btn-sm coord-copy-btn" id="copy-zoom" title="Copy Zoom level">
+                            <i class="bi bi-clipboard"></i>
+                          </button>
+                        </dd>
+
+                        <!-- Copy Button Rows -->
+                        <dt class="col-sm-6"></dt>
+                        <dd class="col-sm-6 mb-2">
+                          <button class="btn btn-sm btn-copy w-100" id="copy-coords-sheets">
+                            <i class="bi bi-clipboard"></i> {{ lang.object.coordinates.copy_sheets }}
+                          </button>
+                        </dd>
+
+                        <dt class="col-sm-6"></dt>
+                        <dd class="col-sm-6 mb-0">
+                          <button class="btn btn-sm btn-copy w-100" id="copy-coords-csv">
+                            <i class="bi bi-clipboard"></i> {{ lang.object.coordinates.copy_csv }}
+                          </button>
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Object Metadata -->
+    <div class="col-lg-4">
+      {% if page.demo %}
+      <p class="object-demo-label">{{ lang.story.demo_label }}</p>
+      {% endif %}
+      <h1>{{ page.title }}</h1>
+
+      {% if page.description %}
+      <p class="lead">{{ page.description }}</p>
+      {% endif %}
+
+      <dl class="row mt-4">
+        {% if page.creator %}
+        <dt class="col-sm-4">{{ lang.object.metadata.creator }}</dt>
+        <dd class="col-sm-8">{{ page.creator }}</dd>
+        {% endif %}
+
+        {% if page.period %}
+        <dt class="col-sm-4">{{ lang.object.metadata.period }}</dt>
+        <dd class="col-sm-8">{{ page.period }}</dd>
+        {% endif %}
+
+        {% if page.medium %}
+        <dt class="col-sm-4">{{ lang.object.metadata.medium }}</dt>
+        <dd class="col-sm-8">{{ page.medium }}</dd>
+        {% endif %}
+
+        {% if page.dimensions %}
+        <dt class="col-sm-4">{{ lang.object.metadata.dimensions }}</dt>
+        <dd class="col-sm-8">{{ page.dimensions }}</dd>
+        {% endif %}
+
+        {% if page.location %}
+        <dt class="col-sm-4">{{ lang.object.metadata.location }}</dt>
+        <dd class="col-sm-8">{{ page.location }}</dd>
+        {% endif %}
+
+        {% if page.credit %}
+        <dt class="col-sm-4">{{ lang.object.metadata.credit }}</dt>
+        <dd class="col-sm-8">{{ page.credit }}</dd>
+        {% endif %}
+
+        {% comment %} Custom metadata fields from extra columns in objects.csv {% endcomment %}
+        {% if page.extra_metadata %}
+        {% for field in page.extra_metadata %}
+        {% assign field_key = field[0] %}
+        {% assign field_value = field[1] %}
+        {% if lang.object.metadata[field_key] %}
+          {% assign field_label = lang.object.metadata[field_key] %}
+        {% else %}
+          {% assign field_label = field_key | replace: "_", " " | capitalize %}
+        {% endif %}
+        <dt class="col-sm-4">{{ field_label }}</dt>
+        <dd class="col-sm-8">{{ field_value }}</dd>
+        {% endfor %}
+        {% endif %}
+
+        {% assign external_source = page.source_url | default: page.iiif_manifest %}
+        {% if external_source and external_source != "" %}
+        <dt class="col-sm-4">{{ lang.object.metadata.iiif_manifest }}</dt>
+        <dd class="col-sm-8">
+          <div style="position: relative; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 0.5rem 3rem 0.5rem 0.75rem; overflow: hidden;">
+            <code style="color: #2c3e50; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">{{ external_source }}</code>
+            <button class="btn btn-sm" id="copy-manifest" data-manifest="{{ external_source }}" style="position: absolute; top: 50%; right: 0.5rem; transform: translateY(-50%); background-color: transparent; border: none; color: #2c3e50; padding: 0.25rem;" title="Copy manifest URL">
+              <i class="bi bi-clipboard"></i>
+            </button>
+          </div>
+        </dd>
+        {% elsif page.object_id %}
+        <dt class="col-sm-4">{{ lang.object.metadata.iiif_manifest }}</dt>
+        <dd class="col-sm-8">
+          {% assign manifest_url = site.url | append: site.baseurl | append: '/iiif/objects/' | append: page.object_id | append: '/manifest.json' %}
+          <div style="position: relative; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 0.5rem 3rem 0.5rem 0.75rem; overflow: hidden;">
+            <code style="color: #2c3e50; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">{{ manifest_url }}</code>
+            <button class="btn btn-sm" id="copy-manifest" data-manifest="{{ manifest_url }}" style="position: absolute; top: 50%; right: 0.5rem; transform: translateY(-50%); background-color: transparent; border: none; color: #2c3e50; padding: 0.25rem;" title="Copy manifest URL">
+              <i class="bi bi-clipboard"></i>
+            </button>
+          </div>
+        </dd>
+        {% endif %}
+      </dl>
+
+      <!-- Long Description -->
+      {% if content %}
+      <div class="object-content mt-4 pt-4 border-top">
+        {{ content }}
+      </div>
+      {% endif %}
+
+      <!-- Related Stories -->
+      {% assign related_stories = site.stories | where_exp: "story", "story.objects contains page.object_id" %}
+      {% if related_stories.size > 0 %}
+      <div class="related-stories mt-4 pt-4 border-top">
+        <h3>{{ lang.object.metadata.appears_in_stories }}</h3>
+        <ul class="list-unstyled">
+          {% for story in related_stories %}
+          <li class="mb-2">
+            <a href="{{ story.url | relative_url }}">{{ story.story_number }}. {{ story.title }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Tify IIIF Viewer -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tify@0.35.0/dist/tify.css">
+<script type="module">
+  import Tify from 'https://cdn.jsdelivr.net/npm/tify@0.35.0/dist/tify.js';
+
+  // Expose language strings to JavaScript
+  window.telarCoordLang = {
+    copied: "{{ lang.object.coordinates.copied }}"
+  };
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Coordinate panel theme colouring — detect luminance of theme colour
+    const panel = document.querySelector('.coordinate-panel');
+    if (panel) {
+      const bg = getComputedStyle(document.documentElement).getPropertyValue('--color-button-bg').trim();
+      if (bg) {
+        // Parse hex colour to RGB
+        const hex = bg.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16) / 255;
+        const g = parseInt(hex.substring(2, 4), 16) / 255;
+        const b = parseInt(hex.substring(4, 6), 16) / 255;
+        // WCAG relative luminance
+        const lum = 0.2126 * (r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4))
+                   + 0.7152 * (g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4))
+                   + 0.0722 * (b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4));
+        panel.classList.add(lum > 0.179 ? 'coord-light' : 'coord-dark');
+      }
+    }
+
+    {% assign external_source = page.source_url | default: page.iiif_manifest %}
+    {% if external_source and external_source != "" %}
+    const manifestUrl = '{{ external_source }}';
+    {% elsif page.object_id %}
+    const manifestUrl = '{{ site.baseurl }}/iiif/objects/{{ page.object_id }}/manifest.json';
+    {% else %}
+    console.error('No IIIF source specified');
+    return;
+    {% endif %}
+
+    console.log('Loading IIIF resource with Tify:', manifestUrl);
+
+    // Initialize Tify with IIIF manifest
+    const tify = new Tify({
+      container: '#object-viewer',
+      manifestUrl: manifestUrl,
+      panels: [],
+      urlQueryKey: false,
+    });
+
+    // Wait for Tify's OpenSeadragon viewer to be ready
+    try {
+      await tify.ready;
+    } catch (err) {
+      console.error('Tify failed to initialize:', err);
+      return;
+    }
+
+    // Detect multi-page manifest
+    let isMultiPage = false;
+    try {
+      const resp = await fetch(manifestUrl);
+      const manifest = await resp.json();
+      const canvases = manifest.items || (manifest.sequences && manifest.sequences[0] && manifest.sequences[0].canvases) || [];
+      isMultiPage = canvases.length > 1;
+      if (isMultiPage) {
+        document.getElementById('object-viewer').classList.add('multipage');
+        const pageRows = document.querySelectorAll('.coord-page-row');
+        pageRows.forEach(function(el) {
+          el.style.display = 'flex';
+        });
+        var singleInstr = document.querySelector('.coord-instructions-single');
+        var multiInstr = document.querySelector('.coord-instructions-multi');
+        if (singleInstr) singleInstr.style.display = 'none';
+        if (multiInstr) multiInstr.style.display = 'block';
+        console.log('Multi-page manifest detected:', canvases.length, 'pages');
+      }
+    } catch (err) {
+      console.log('Could not determine page count:', err);
+    }
+
+    // Access OpenSeadragon viewer directly via Tify's public API
+    const osdViewer = tify.viewer;
+    console.log('Got OSD viewer reference, world items:', osdViewer.world.getItemCount());
+
+    // If no items loaded yet, set up viewport for when image loads
+    if (osdViewer.world.getItemCount() === 0) {
+      console.log('No items loaded yet - setting up viewport for when image loads');
+
+      osdViewer.addHandler('open', function() {
+        console.log('OSD open event - forcing goHome()');
+        setTimeout(function() {
+          osdViewer.viewport.goHome(true);
+        }, 100);
+      });
+    } else {
+      console.log('Items already loaded, forcing goHome()');
+      osdViewer.viewport.goHome(true);
+    }
+
+    // Listen for 'add-item' event to reset after tiles load
+    osdViewer.world.addHandler('add-item', function() {
+      console.log('Image loaded (add-item event), resetting to home position');
+      setTimeout(function() {
+        osdViewer.viewport.goHome(true);
+      }, 50);
+    });
+
+    // Listen for 'open-failed' to catch any errors
+    osdViewer.addHandler('open-failed', function(event) {
+      console.error('OpenSeadragon open failed:', event);
+    });
+
+    // Coordinate tracking
+    function updateCoordinates() {
+      if (!osdViewer || !osdViewer.viewport) return;
+
+      try {
+        const viewport = osdViewer.viewport;
+        const center = viewport.getCenter();
+        const bounds = viewport.getHomeBounds();
+
+        // Convert to normalized 0-1 coordinates
+        const x = Math.max(0, Math.min(1, (center.x - bounds.x) / bounds.width));
+        const y = Math.max(0, Math.min(1, (center.y - bounds.y) / bounds.height));
+
+        // Get zoom relative to home zoom
+        const homeZoom = viewport.getHomeZoom();
+        const currentZoom = viewport.getZoom();
+        const zoom = Math.max(0.1, Math.min(10, currentZoom / homeZoom));
+
+        // Update display
+        document.getElementById('coord-x').textContent = x.toFixed(3);
+        document.getElementById('coord-y').textContent = y.toFixed(3);
+        document.getElementById('coord-zoom').textContent = zoom.toFixed(1);
+
+        // Update page number for multi-page objects
+        if (isMultiPage) {
+          const page = (tify.options && tify.options.pages && tify.options.pages.length > 0) ? tify.options.pages[0] : 1;
+          document.getElementById('coord-page').textContent = page;
+        }
+      } catch (error) {
+        console.error('Error updating coordinates:', error);
+      }
+    }
+
+    // Add viewport change handlers
+    osdViewer.addHandler('animation', updateCoordinates);
+    osdViewer.addHandler('animation-finish', updateCoordinates);
+    osdViewer.addHandler('zoom', updateCoordinates);
+    osdViewer.addHandler('pan', updateCoordinates);
+
+    // Update periodically
+    setInterval(updateCoordinates, 500);
+
+    // Initial update
+    updateCoordinates();
+  });
+</script>
+
+<!-- Copy button functionality and panel visibility -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Hide/show button when panel opens/closes
+    const coordinatePanel = document.getElementById('coordinatePanel');
+    const coordinateButton = document.getElementById('coordinateButton');
+
+    if (coordinatePanel && coordinateButton) {
+      coordinatePanel.addEventListener('show.bs.collapse', function() {
+        coordinateButton.style.display = 'none';
+      });
+
+      coordinatePanel.addEventListener('hide.bs.collapse', function() {
+        coordinateButton.style.display = 'block';
+      });
+    }
+
+    // CSV format copy button (comma-separated)
+    document.getElementById('copy-coords-csv').addEventListener('click', function() {
+      const x = document.getElementById('coord-x').textContent;
+      const y = document.getElementById('coord-y').textContent;
+      const zoom = document.getElementById('coord-zoom').textContent;
+      const pageEl = document.getElementById('coord-page');
+      const isMulti = document.querySelector('.coord-page-row') && document.querySelector('.coord-page-row').style.display !== 'none';
+      const text = isMulti ? `${x},${y},${zoom},${pageEl.textContent}` : `${x},${y},${zoom}`;
+
+      navigator.clipboard.writeText(text).then(function() {
+        const btn = document.getElementById('copy-coords-csv');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-circle"></i> ' + window.telarCoordLang.copied;
+        setTimeout(function() {
+          btn.innerHTML = originalHTML;
+        }, 2000);
+      });
+    });
+
+    // Sheets format copy button (tab-separated)
+    document.getElementById('copy-coords-sheets').addEventListener('click', function() {
+      const x = document.getElementById('coord-x').textContent;
+      const y = document.getElementById('coord-y').textContent;
+      const zoom = document.getElementById('coord-zoom').textContent;
+      const pageEl = document.getElementById('coord-page');
+      const isMulti = document.querySelector('.coord-page-row') && document.querySelector('.coord-page-row').style.display !== 'none';
+      const text = isMulti ? `${x}\t${y}\t${zoom}\t${pageEl.textContent}` : `${x}\t${y}\t${zoom}`;
+
+      navigator.clipboard.writeText(text).then(function() {
+        const btn = document.getElementById('copy-coords-sheets');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-circle"></i> ' + window.telarCoordLang.copied;
+        setTimeout(function() {
+          btn.innerHTML = originalHTML;
+        }, 2000);
+      });
+    });
+
+    // Copy manifest URL button
+    const copyManifestBtn = document.getElementById('copy-manifest');
+    if (copyManifestBtn) {
+      copyManifestBtn.addEventListener('click', function() {
+        const manifestUrl = this.getAttribute('data-manifest');
+
+        navigator.clipboard.writeText(manifestUrl).then(function() {
+          const btn = document.getElementById('copy-manifest');
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = '<i class="bi bi-check-circle"></i>';
+          setTimeout(function() {
+            btn.innerHTML = originalHTML;
+          }, 2000);
+        }).catch(function(err) {
+          console.error('Failed to copy manifest URL:', err);
+        });
+      });
+    }
+
+    // Individual coordinate copy buttons
+    const copyXBtn = document.getElementById('copy-x');
+    if (copyXBtn) {
+      copyXBtn.addEventListener('click', function() {
+        const x = document.getElementById('coord-x').textContent;
+        navigator.clipboard.writeText(x).then(function() {
+          const btn = document.getElementById('copy-x');
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = '<i class="bi bi-check-circle"></i>';
+          setTimeout(function() {
+            btn.innerHTML = originalHTML;
+          }, 2000);
+        });
+      });
+    }
+
+    const copyYBtn = document.getElementById('copy-y');
+    if (copyYBtn) {
+      copyYBtn.addEventListener('click', function() {
+        const y = document.getElementById('coord-y').textContent;
+        navigator.clipboard.writeText(y).then(function() {
+          const btn = document.getElementById('copy-y');
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = '<i class="bi bi-check-circle"></i>';
+          setTimeout(function() {
+            btn.innerHTML = originalHTML;
+          }, 2000);
+        });
+      });
+    }
+
+    const copyZoomBtn = document.getElementById('copy-zoom');
+    if (copyZoomBtn) {
+      copyZoomBtn.addEventListener('click', function() {
+        const zoom = document.getElementById('coord-zoom').textContent;
+        navigator.clipboard.writeText(zoom).then(function() {
+          const btn = document.getElementById('copy-zoom');
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = '<i class="bi bi-check-circle"></i>';
+          setTimeout(function() {
+            btn.innerHTML = originalHTML;
+          }, 2000);
+        });
+      });
+    }
+
+    const copyPageBtn = document.getElementById('copy-page');
+    if (copyPageBtn) {
+      copyPageBtn.addEventListener('click', function() {
+        const page = document.getElementById('coord-page').textContent;
+        navigator.clipboard.writeText(page).then(function() {
+          const btn = document.getElementById('copy-page');
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = '<i class="bi bi-check-circle"></i>';
+          setTimeout(function() {
+            btn.innerHTML = originalHTML;
+          }, 2000);
+        });
+      });
+    }
+  });
+</script>

@@ -1,0 +1,255 @@
+<!--
+  Share Panel Modal
+  Version: v0.8.0-beta (Redesigned with pill tabs)
+
+  Bootstrap Modal for sharing and embedding stories.
+  Uses pill-style tabs: "this story"/"a single story" and "this whole site"
+-->
+
+<div class="modal fade" id="panel-share" tabindex="-1" aria-labelledby="panel-share-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header share-panel-header">
+        <div class="share-header-row">
+          <h5 class="share-panel-title" id="panel-share-title">{{ lang.share.title }}</h5>
+          <div class="share-pill-tabs" role="tablist">
+            <button
+              class="share-pill-tab active"
+              id="tab-story"
+              data-bs-toggle="tab"
+              data-bs-target="#content-story"
+              type="button"
+              role="tab"
+              aria-controls="content-story"
+              aria-selected="true">
+              {% if page.layout == "story" %}{{ lang.share.tab_this_story }}{% else %}{{ lang.share.tab_a_single_story }}{% endif %}
+            </button>
+            <button
+              class="share-pill-tab"
+              id="tab-site"
+              data-bs-toggle="tab"
+              data-bs-target="#content-site"
+              type="button"
+              role="tab"
+              aria-controls="content-site"
+              aria-selected="false">
+              {{ lang.share.tab_this_whole_site }}
+            </button>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ lang.buttons.close }}"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="tab-content">
+          {% if page.layout == "story" %}
+          <!-- ==================== STORY PAGE ==================== -->
+
+          <!-- Tab: this story -->
+          <div class="tab-pane fade show active" id="content-story" role="tabpanel" aria-labelledby="tab-story">
+            <!-- Story Privacy (only shown for protected stories) -->
+            <div class="share-section d-none" id="story-privacy-section">
+              <label class="share-section-label">{{ lang.share.story_privacy }}</label>
+              <div class="share-privacy-row">
+                <span class="share-privacy-question">{{ lang.share.privacy_question }}</span>
+                <div class="share-key-toggle" role="group" aria-label="{{ lang.share.include_key_label }}">
+                  <button type="button" class="share-key-btn active" data-value="without" id="share-key-without">
+                    {{ lang.share.without_key }}
+                  </button>
+                  <button type="button" class="share-key-btn" data-value="with" id="share-key-with">
+                    {{ lang.share.with_key }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Share Link -->
+            <div class="share-section">
+              <label class="share-section-label">{{ lang.share.share_link_heading }}</label>
+              <p class="share-section-help">{{ lang.share.help_story_link_story }}</p>
+              <div class="share-input-row">
+                <input
+                  type="text"
+                  class="share-input"
+                  id="share-url-input"
+                  readonly
+                  value=""
+                  aria-label="{{ lang.share.share_link_heading }}">
+                <button class="share-copy-btn" type="button" id="share-copy-link-btn" aria-label="{{ lang.share.copy }}">
+                  <span class="material-symbols-outlined">content_copy</span>
+                  <span class="btn-text">{{ lang.share.copy }}</span>
+                </button>
+              </div>
+              <p class="share-warning d-none" id="share-key-warning">{{ lang.share.include_key_warning }}</p>
+            </div>
+
+            <!-- Embed Code -->
+            <div class="share-section">
+              <label class="share-section-label">{{ lang.share.embed_code_heading }}</label>
+              <p class="share-section-help">{{ lang.share.help_embed_story }}</p>
+              <textarea
+                class="share-textarea"
+                id="embed-code-textarea"
+                rows="3"
+                readonly
+                aria-label="{{ lang.share.embed_code_heading }}"></textarea>
+              <p class="share-warning d-none" id="embed-key-warning">{{ lang.share.embed_key_warning }}</p>
+              <div class="share-embed-controls">
+                <div class="share-embed-preset">
+                  <label class="share-embed-label">{{ lang.share.preset_sizes }}</label>
+                  <select class="share-embed-select" id="embed-preset-select">
+                    <option value="canvas" selected>{{ lang.share.canvas_lms }}</option>
+                    <option value="moodle">{{ lang.share.moodle_blackboard }}</option>
+                    <option value="wordpress">{{ lang.share.wordpress }}</option>
+                    <option value="squarespace">{{ lang.share.squarespace }}</option>
+                    <option value="wix">{{ lang.share.wix }}</option>
+                    <option value="mobile">{{ lang.share.mobile }}</option>
+                    <option value="fixed">{{ lang.share.fixed }}</option>
+                    <option value="custom">{{ lang.share.custom }}</option>
+                  </select>
+                </div>
+                <div class="share-embed-dimension">
+                  <label class="share-embed-label">{{ lang.share.width }}</label>
+                  <input type="text" class="share-embed-input" id="embed-width-input" value="100%">
+                </div>
+                <div class="share-embed-dimension">
+                  <label class="share-embed-label">{{ lang.share.height }}</label>
+                  <input type="text" class="share-embed-input" id="embed-height-input" value="800">
+                </div>
+                <div class="share-embed-copy">
+                  <button class="share-copy-btn" type="button" id="embed-copy-code-btn" aria-label="{{ lang.share.copy }}">
+                    <span class="material-symbols-outlined">content_copy</span>
+                    <span class="btn-text">{{ lang.share.copy }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: this whole site -->
+          <div class="tab-pane fade" id="content-site" role="tabpanel" aria-labelledby="tab-site">
+            <div class="share-section">
+              <label class="share-section-label">{{ lang.share.share_link_heading }}</label>
+              <p class="share-section-help">{{ lang.share.help_site_link }}</p>
+              <div class="share-input-row">
+                <input
+                  type="text"
+                  class="share-input"
+                  id="share-site-url-input"
+                  readonly
+                  value=""
+                  aria-label="{{ lang.share.share_link_heading }}">
+                <button class="share-copy-btn" type="button" id="share-copy-site-btn" aria-label="{{ lang.share.copy }}">
+                  <span class="material-symbols-outlined">content_copy</span>
+                  <span class="btn-text">{{ lang.share.copy }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {% else %}
+          <!-- ==================== HOMEPAGE ==================== -->
+
+          <!-- Tab: a single story -->
+          <div class="tab-pane fade show active" id="content-story" role="tabpanel" aria-labelledby="tab-story">
+            <!-- Story Selector -->
+            <div class="share-section">
+              <label class="share-section-label">{{ lang.share.select_story_heading }}</label>
+              <select class="share-story-select" id="share-story-select">
+                <option value="">{{ lang.share.select_placeholder }}</option>
+                <!-- Populated by JavaScript -->
+              </select>
+            </div>
+
+            <!-- Share Link -->
+            <div class="share-section">
+              <label class="share-section-label">{{ lang.share.share_link_heading }}</label>
+              <p class="share-section-help">{{ lang.share.help_story_link_story }}</p>
+              <div class="share-input-row">
+                <input
+                  type="text"
+                  class="share-input"
+                  id="share-url-input"
+                  readonly
+                  value=""
+                  placeholder="{{ lang.share.select_story_first }}"
+                  aria-label="{{ lang.share.share_link_heading }}">
+                <button class="share-copy-btn" type="button" id="share-copy-link-btn" aria-label="{{ lang.share.copy }}">
+                  <span class="material-symbols-outlined">content_copy</span>
+                  <span class="btn-text">{{ lang.share.copy }}</span>
+                </button>
+              </div>
+              <p class="share-warning d-none" id="share-protected-warning">{{ lang.share.protected_story_warning }}</p>
+            </div>
+
+            <!-- Embed Code -->
+            <div class="share-section">
+              <label class="share-section-label">{{ lang.share.embed_code_heading }}</label>
+              <p class="share-section-help">{{ lang.share.help_embed_story }}</p>
+              <textarea
+                class="share-textarea"
+                id="embed-code-textarea"
+                rows="3"
+                readonly
+                placeholder="{{ lang.share.select_story_first }}"
+                aria-label="{{ lang.share.embed_code_heading }}"></textarea>
+              <p class="share-warning d-none" id="embed-protected-warning">{{ lang.share.protected_embed_warning }}</p>
+              <div class="share-embed-controls">
+                <div class="share-embed-preset">
+                  <label class="share-embed-label">{{ lang.share.preset_sizes }}</label>
+                  <select class="share-embed-select" id="embed-preset-select">
+                    <option value="canvas" selected>{{ lang.share.canvas_lms }}</option>
+                    <option value="moodle">{{ lang.share.moodle_blackboard }}</option>
+                    <option value="wordpress">{{ lang.share.wordpress }}</option>
+                    <option value="squarespace">{{ lang.share.squarespace }}</option>
+                    <option value="wix">{{ lang.share.wix }}</option>
+                    <option value="mobile">{{ lang.share.mobile }}</option>
+                    <option value="fixed">{{ lang.share.fixed }}</option>
+                    <option value="custom">{{ lang.share.custom }}</option>
+                  </select>
+                </div>
+                <div class="share-embed-dimension">
+                  <label class="share-embed-label">{{ lang.share.width }}</label>
+                  <input type="text" class="share-embed-input" id="embed-width-input" value="100%">
+                </div>
+                <div class="share-embed-dimension">
+                  <label class="share-embed-label">{{ lang.share.height }}</label>
+                  <input type="text" class="share-embed-input" id="embed-height-input" value="800">
+                </div>
+                <div class="share-embed-copy">
+                  <button class="share-copy-btn" type="button" id="embed-copy-code-btn" aria-label="{{ lang.share.copy }}">
+                    <span class="material-symbols-outlined">content_copy</span>
+                    <span class="btn-text">{{ lang.share.copy }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: this whole site -->
+          <div class="tab-pane fade" id="content-site" role="tabpanel" aria-labelledby="tab-site">
+            <div class="share-section">
+              <label class="share-section-label">{{ lang.share.share_link_heading }}</label>
+              <p class="share-section-help">{{ lang.share.help_site_link }}</p>
+              <div class="share-input-row">
+                <input
+                  type="text"
+                  class="share-input"
+                  id="share-site-url-input"
+                  readonly
+                  value=""
+                  aria-label="{{ lang.share.share_link_heading }}">
+                <button class="share-copy-btn" type="button" id="share-copy-site-btn" aria-label="{{ lang.share.copy }}">
+                  <span class="material-symbols-outlined">content_copy</span>
+                  <span class="btn-text">{{ lang.share.copy }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
