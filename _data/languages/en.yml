@@ -14,6 +14,7 @@ navigation:
 buttons:
   back: "← Back"
   back_to_home: "← Back to Home"
+  back_to_start: "↑ Back to Start"
   back_to_collection: "← Back to Collection"
   back_to_glossary: "← Back to Glossary"
   learn_more: "Learn more"
@@ -68,6 +69,18 @@ object:
     copy_csv: "x, y, zoom (CSV)"
     copied: "Copied!"
 
+  # Clip time picker tool (video and audio)
+  clip_picker:
+    button: "Set clip times"
+    heading: "Clip Times"
+    instructions: "Use this panel to set the start and end times for a clip from this video. Play the video to the position you want, then press the clock button next to Start or End to capture that time. Copy the values into your structure spreadsheet."
+    audio_instructions: "Use this panel to set the start and end times for a clip from this audio track. Drag the edges of the highlighted region on the waveform above to adjust the boundaries. Copy the values into your structure spreadsheet."
+    start: "Start"
+    end: "End"
+    set_current: "Set to current time"
+    copy_sheets: "start, end (Sheets)"
+    copy_csv: "start, end (CSV)"
+
   # Object thumbnails
   no_image: "No image"
 
@@ -80,6 +93,7 @@ demo:
 story:
   demo_label: "Demo content"
   step_number: "Step {{ number }}"
+  sections_heading: "Sections"
   scroll_hint: "Press ↓ or scroll to begin"
   scroll_hint_mobile: "Use the arrow buttons to navigate"
   config_issues_heading: "The following steps have content or configuration issues:"
@@ -103,6 +117,7 @@ pages:
   objects_intro_all_collection: "There are {count} objects in the collection. Have a look at them below."
   objects_intro_sample_stories: "There are {count} objects featured in the stories. Have a look at {sample} of them below."
   objects_intro_sample_collection: "There are {count} objects in the collection. Have a look at {sample} of them below."
+  collection_mode_heading: "Explore the collection"
 
 # Objects browse and search (v0.8.0)
 objects:
@@ -262,6 +277,7 @@ share:
   # Pill-style tabs
   tab_this_story: "this story"
   tab_a_single_story: "a single story"
+  tab_this_view: "this view"
   tab_this_whole_site: "this whole site"
 
   # Section headings
@@ -282,6 +298,7 @@ share:
 
   # Help text
   help_story_link_story: "Copy a direct link to this story to share by email, social media, or messaging apps."
+  help_view_link: "Copy a link to this exact point in the story — the step and panel you're currently viewing."
   help_site_link: "Copy a link to the site homepage, where visitors can browse all stories."
   help_embed_story: "Embed this story in another website or LMS."
 

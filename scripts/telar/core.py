@@ -25,11 +25,15 @@ checks for Christmas Tree Mode in `_config.yml`, then converts the three
 CSV types in order: project setup, objects, and story files. Story files
 are discovered dynamically — every CSV in `telar-content/spreadsheets/` that
 is not a system file (`project.csv`, `objects.csv`, or their Spanish
-equivalents) is treated as a story. After all CSVs are converted, demo
-content is loaded and merged if available. Protected stories (v0.8.0+)
-are then encrypted using the story_key from _config.yml.
+equivalents) is treated as a story. The `--story` flag narrows this to a
+single CSV by stem name, which speeds up iteration when working on one
+story at a time. After all CSVs are converted, demo content is loaded and
+merged if available. Protected stories are then encrypted using the
+story_key from _config.yml. Finally, `generate_search_data()` builds the
+Lunr.js search index and facet counts that power the gallery's
+browse-and-search interface.
 
-Version: v0.9.1-beta
+Version: v1.1.0
 """
 
 import os
@@ -216,8 +220,68 @@ def _encrypt_protected_stories(data_dir):
             print(f"  ❌ Failed to encrypt {story_json.name}: {e}")
 
 
+AUDIO_EXTENSIONS = ('.mp3', '.ogg', '.m4a')
+
+
+def _generate_audio_manifest(data_dir):
+    """Generate _data/audio_objects.json from objects.json and local audio files.
+
+    Scans telar-content/objects/ for audio files matching object IDs in
+    objects.json, then writes a simple {object_id: extension} manifest.
+    This manifest is consumed by story.html to inject window.audioObjects,
+    which the JS card-type detector needs to distinguish audio objects from
+    IIIF objects.
+
+    Runs as part of the normal csv_to_json pipeline — no external tools
+    required (unlike process_audio.py which needs audiowaveform for peak
+    generation).
+    """
+    objects_json = data_dir / 'objects.json'
+    if not objects_json.exists():
+        return
+
+    with open(objects_json, 'r', encoding='utf-8') as f:
+        objects = json.load(f)
+
+    objects_dir = Path('telar-content/objects')
+    if not objects_dir.exists():
+        return
+
+    manifest = {}
+    for obj in objects:
+        object_id = obj.get('object_id', '').strip()
+        if not object_id:
+            continue
+        for ext in AUDIO_EXTENSIONS:
+            if (objects_dir / f'{object_id}{ext}').exists():
+                manifest[object_id] = ext.lstrip('.')
+                break
+
+    manifest_path = data_dir / 'audio_objects.json'
+    if manifest:
+        with open(manifest_path, 'w', encoding='utf-8') as f:
+            json.dump(manifest, f, indent=2)
+        print(f"  [INFO] Audio manifest: {len(manifest)} audio object(s) → {manifest_path}")
+    elif manifest_path.exists():
+        # No audio objects — remove stale manifest
+        manifest_path.unlink()
+        print(f"  [INFO] No audio objects found — removed stale {manifest_path}")
+
+
 def main():
     """Main conversion process."""
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description='Convert Telar CSV files to JSON for Jekyll'
+    )
+    parser.add_argument(
+        '--story',
+        default=None,
+        help='Story ID (CSV stem) to process; skips all other story CSVs (system CSVs always processed)'
+    )
+    args = parser.parse_args()
+
     # Fetch demo content FIRST (before any CSV processing)
     fetch_demo_content_if_enabled()
 
@@ -284,6 +348,12 @@ def main():
             process_objects
         )
 
+    # Generate audio_objects.json manifest for client-side audio detection.
+    # Maps object_id → file extension (e.g. {"cusb-cyl11337d": "mp3"}).
+    # Without this file, story.html cannot inject window.audioObjects and
+    # the JS card-type detector falls through to IIIF for audio objects.
+    _generate_audio_manifest(data_dir)
+
     # Generate search data for gallery filtering (if enabled in config)
     generate_search_data()
 
@@ -294,6 +364,9 @@ def main():
     if christmas_tree_mode:
         for csv_file in structures_dir.glob('*.csv'):
             if csv_file.name not in system_csvs:
+                # --story flag: skip all story CSVs except the requested one
+                if args.story and csv_file.stem != args.story:
+                    continue
                 json_filename = csv_file.stem + '.json'
                 json_file = data_dir / json_filename
                 csv_to_json(
@@ -304,6 +377,9 @@ def main():
     else:
         for csv_file in structures_dir.glob('*.csv'):
             if csv_file.name not in system_csvs:
+                # --story flag: skip all story CSVs except the requested one
+                if args.story and csv_file.stem != args.story:
+                    continue
                 json_filename = csv_file.stem + '.json'
                 json_file = data_dir / json_filename
                 csv_to_json(

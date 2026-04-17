@@ -1,6 +1,6 @@
 /**
  * Share Panel Functionality
- * @version v0.8.0-beta
+ * @version v1.1.0
  *
  * Handles share link and embed code generation for Telar stories.
  * Redesigned with pill-style tabs and unified privacy toggle.
@@ -65,6 +65,14 @@
       });
     }
 
+    const shareCopyViewBtn = document.getElementById('share-copy-view-btn');
+    if (shareCopyViewBtn) {
+      shareCopyViewBtn.addEventListener('click', function() {
+        const input = document.getElementById('share-view-url-input');
+        if (input) copyToClipboard(input.value, this);
+      });
+    }
+
     if (embedCopyCodeBtn) {
       embedCopyCodeBtn.addEventListener('click', function() {
         const textarea = document.getElementById('embed-code-textarea');
@@ -92,6 +100,7 @@
         shareKeyWithoutBtn.classList.add('active');
         shareKeyWithBtn.classList.remove('active');
         updateShareUrl();
+        updateViewUrl();
         updateEmbedCode();
         updateWarnings();
       });
@@ -103,6 +112,7 @@
         shareKeyWithBtn.classList.add('active');
         shareKeyWithoutBtn.classList.remove('active');
         updateShareUrl();
+        updateViewUrl();
         updateEmbedCode();
         updateWarnings();
       });
@@ -199,6 +209,7 @@
 
     // Update URLs
     updateShareUrl();
+    updateViewUrl();
     updateSiteUrl();
     updateEmbedCode();
     updateWarnings();
@@ -301,6 +312,37 @@
       }
     } else {
       shareUrlInput.value = '';
+    }
+  }
+
+  /**
+   * Update view URL input (story URL with deep-link fragment)
+   */
+  function updateViewUrl() {
+    const shareViewUrlInput = document.getElementById('share-view-url-input');
+    if (!shareViewUrlInput) return;
+
+    if (currentStoryUrl) {
+      try {
+        const url = new URL(currentStoryUrl);
+        let cleanUrl = url.origin + url.pathname;
+
+        if (includeKey && storyKey) {
+          cleanUrl += '?key=' + encodeURIComponent(storyKey);
+        }
+
+        // Append current fragment for deep-link
+        const currentHash = window.location.hash;
+        if (currentHash && currentHash !== '#') {
+          cleanUrl += currentHash;
+        }
+
+        shareViewUrlInput.value = cleanUrl;
+      } catch (e) {
+        shareViewUrlInput.value = currentStoryUrl;
+      }
+    } else {
+      shareViewUrlInput.value = '';
     }
   }
 
@@ -519,13 +561,14 @@
    */
   function showSuccessFeedback(triggerButton) {
     // Update button icon temporarily
-    const btnIcon = triggerButton.querySelector('.material-symbols-outlined');
+    const btnIcon = triggerButton.querySelector('.icon');
     if (btnIcon) {
-      const originalIcon = btnIcon.textContent;
-      btnIcon.textContent = 'check_circle';
+      const originalSvg = btnIcon.outerHTML;
+      btnIcon.outerHTML = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>';
 
       setTimeout(() => {
-        btnIcon.textContent = originalIcon;
+        const checkIcon = triggerButton.querySelector('.icon');
+        if (checkIcon) checkIcon.outerHTML = originalSvg;
       }, 2000);
     }
   }
