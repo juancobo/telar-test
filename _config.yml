@@ -30,7 +30,7 @@ collection_interface:
 # Story Protection (optional)
 # Stories with protected=yes in project.csv will be encrypted.
 # Viewers need this key to unlock protected stories.
-story_key: "test"
+story_key: test
 
 # Google Sheets Integration (optional)
 # Manage content via Google Sheets instead of editing CSV files directly.
@@ -157,13 +157,3 @@ development-features:
   # Use this when building a site with only custom pages (no stories or objects)
   # (Backward compatible: hide_collections also supported)
   skip_collections: false
-story_key: test
-story_key: test
-story_key: test
-story_key: test
-story_key: test
-story_key: test
-story_key: test
-story_key: test
-story_key: test
-story_key: test
