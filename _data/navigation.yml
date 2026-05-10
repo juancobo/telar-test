@@ -11,18 +11,3 @@ menu:
   - title_en: "Objects"
     titulo_es: "Objects"
     url: /objects/
-  - title_en: "New page 123456"
-    titulo_es: "New page 123456"
-    url: /new-page-123456/
-  - title_en: "About"
-    titulo_es: "About"
-    url: /about/
-  - title_en: "Page title 12345"
-    titulo_es: "Page title 12345"
-    url: /page-title-12345/
-  - title_en: "Another page"
-    titulo_es: "Another page"
-    url: /another-page/
-  - title_en: "Page3"
-    titulo_es: "Page3"
-    url: /page3/
