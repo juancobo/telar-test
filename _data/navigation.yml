@@ -11,3 +11,6 @@ menu:
   - title_en: "Objects"
     titulo_es: "Objects"
     url: /objects/
+  - title_en: "Kingdom paste"
+    titulo_es: "Kingdom paste"
+    url: /kingdom-paste/
