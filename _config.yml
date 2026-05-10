@@ -10,7 +10,7 @@ author: ""
 email: ""
 telar_theme: "trama" # Options: trama, paisajes, neogranadina, santa-barbara, austin, or custom
 logo: ""
-telar_language: es
+telar_language: en
 collection_mode: true
 
 # Story Interface Settings
