@@ -2,12 +2,15 @@ menu:
   - title_en: "Glossary"
     titulo_es: "Glossary"
     url: /glossary/
-  - title_en: "Objects"
-    titulo_es: "Objects"
-    url: /objects/
   - title_en: "New page"
     titulo_es: "New page"
     url: /new-page/
+  - title_en: "Page4"
+    titulo_es: "Page4"
+    url: /page4/
+  - title_en: "Objects"
+    titulo_es: "Objects"
+    url: /objects/
   - title_en: "New page 123456"
     titulo_es: "New page 123456"
     url: /new-page-123456/
@@ -20,3 +23,6 @@ menu:
   - title_en: "Another page"
     titulo_es: "Another page"
     url: /another-page/
+  - title_en: "Page3"
+    titulo_es: "Page3"
+    url: /page3/
