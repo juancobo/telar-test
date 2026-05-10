@@ -10,7 +10,7 @@ author: ""
 email: ""
 telar_theme: "trama" # Options: trama, paisajes, neogranadina, santa-barbara, austin, or custom
 logo: ""
-telar_language: en
+telar_language: es
 collection_mode: true
 
 # Story Interface Settings
@@ -157,5 +157,6 @@ development-features:
   # Use this when building a site with only custom pages (no stories or objects)
   # (Backward compatible: hide_collections also supported)
   skip_collections: false
+story_key: test
 story_key: test
 story_key: test

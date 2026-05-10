@@ -1,7 +1,19 @@
 menu:
-  - title_en: "Objects"
-    titulo_es: "Objects"
-    url: /objects/
   - title_en: "Glossary"
     titulo_es: "Glossary"
     url: /glossary/
+  - title_en: "Objects"
+    titulo_es: "Objects"
+    url: /objects/
+  - title_en: "About"
+    titulo_es: "About"
+    url: /about/
+  - title_en: "New page"
+    titulo_es: "New page"
+    url: /new-page/
+  - title_en: "New page 5"
+    titulo_es: "New page 5"
+    url: /new-page-5/
+  - title_en: "New page 123456"
+    titulo_es: "New page 123456"
+    url: /new-page-123456/
