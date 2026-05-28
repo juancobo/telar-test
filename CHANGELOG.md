@@ -4,7 +4,95 @@ All notable changes to Telar will be documented in this file.
 
 ## [Unreleased]
 
-## [1.2.1-beta] - 2026-05-08
+## [1.4.0] - 2026-05-26
+
+Runtime upgrade with no content changes required. Existing stories, objects, and configuration continue to work unchanged. This release replaces the Tify viewer with a custom, self-hosted OpenSeadragon wrapper and rebuilds the responsive system around a single source of truth, fixing cross-device IIIF centering.
+
+### Fixed
+
+- **Cross-device IIIF centering**: Rewrote the focal-point algorithm using a two-circle model that derives a device-independent focal radius from the authoring aspect ratio and reads the measured text-card rectangle. Fixes focal points landing off-target across viewport widths, high-zoom near-bottom clipping, iPad portrait Y pinning, horizontal drift under zoom, and a low baseline. Verified on iPhone and iPad portrait via iOS Simulator and a 12-cell device matrix.
+
+- **Deep-link and in-story navigation jump**: `navigateToStep()` and `applyDeepLinkOnLoad()` previously used a manual scroll poke that left the scroll engine in a stale state, freezing the IIIF viewer at a partially-interpolated zoom. Both now use a forced immediate scroll with snap-index sync, giving a deterministic jump to the authored position.
+
+- **iOS Safari URL-bar layout jump**: All layout-affecting heights now use `dvh` with a `vh` fallback via `@supports`. Eliminates the reflow that occurred when the Safari URL bar showed or hid on scroll.
+
+- **Notch safe-area clearance**: Applied `env(safe-area-inset-*)` at the credits badge, mobile navigation buttons, and mobile text card using the `max(<offset>, env(...))` idiom.
+
+- **Hover styles on touch devices**: All `:hover` rules are now wrapped in `@media (hover: hover) and (pointer: fine)`, so touch devices no longer show sticky hover states.
+
+- **Reduced-motion compliance**: Smooth scrolling is disabled when `prefers-reduced-motion` is set, and IIIF pan/zoom animations apply immediately under the same preference.
+
+### Added
+
+- **Custom IIIF viewer**: New `assets/js/telar-story/iiif-viewer.js` and `iiif-manifest.js` wrap OpenSeadragon and parse IIIF Presentation API v2 and v3 manifests, supporting multi-page manifests, a pagination chrome for multi-page objects, and an error fallback UI. Scroll-to-zoom and click-to-zoom stay under Telar's scroll-engine control on story plates; object pages opt in to zoom gestures.
+
+- **`layout-mode.js` — responsive runtime module**: Replaces the binary `state.isMobileViewport` flag with a `state.layoutMode` abstraction (`'horizontal'` / `'vertical'`). Owns the single `resize`/`orientationchange` listener in the runtime and reads breakpoints from CSS custom properties so JS and CSS cannot drift.
+
+- **`--telar-*` CSS custom properties**: `_sass/_responsive.scss` is now the single source of truth for layout-affecting constants (breakpoints, card geometry, density tiers, audio/video scaling factors), mirrored to `--telar-*` properties on `:root` for JS to read via `getComputedStyle`.
+
+- **Container queries on `.text-card`**: `container-type: inline-size` added; font size, padding, gap, and line height inside the card now scale off the card's own width.
+
+- **Six `object.viewer.*` language keys** in `en.yml` and `es.yml` (`prev_page`, `next_page`, `page_input_label`, `page_input_aria`, `image_unavailable_title`, `image_unavailable_detail`) for the IIIF viewer chrome and error UI.
+
+### Changed
+
+- **Cascade layer order**: Bootstrap 5.3.0 is now loaded inside a `@layer` cascade layer, so Telar's own rules take precedence without `!important`. Over 150 Bootstrap-fight `!important` declarations removed across `_sass/`.
+
+- **Breakpoints recalibrated**: the vertical layout now activates at widths narrower than 1024px or aspect ratios narrower than 3:4, covering tablets in portrait as well as phones.
+
+- **Height-tier blocks consolidated**: nine `@media (max-height: ...)` blocks across the stylesheets collapsed into one block in `_sass/_responsive.scss`.
+
+- **Vendored OpenSeadragon 6.0.2**: `assets/vendor/openseadragon.min.js` (337 KB) replaces the Tify CDN load. Source and SHA-256 digest are recorded in `assets/vendor/README.md`.
+
+### Removed
+
+- **Tify IIIF viewer and Vue dependency**: removed the Tify CDN stylesheet and module imports from `_layouts/story.html` and `_layouts/object.html`, along with the 56 `!important` declarations in `_sass/_viewer.scss` that existed solely to hide Tify's UI chrome. Tify's ~529 KB CDN payload (469 KB JS + 60 KB CSS) gives way to a 337 KB vendored OpenSeadragon — about 190 KB less viewer code, served locally with no CDN dependency.
+
+- **`state.isMobileViewport`**: replaced by `state.layoutMode`.
+
+- **Stale bundle files**: `assets/js/telar-story.bundle.js` and `assets/js/telar-story-bundle.js` deleted (unreferenced leftovers from an earlier build naming scheme).
+
+## [1.3.0] - 2026-05-10
+
+i18n hygiene plus a new sister-file localization convention. Wires up Telar's existing language packs in places that previously hardcoded English, introduces a sister-file convention for localizing user pages, and refreshes the demo content to reflect current capabilities (multimedia, Telar Compositor, dual storytelling/collections framing).
+
+### Fixed
+
+- **Homepage headings rendered in English for Spanish users**: `_layouts/index.html` now resolves the stories and objects headings via `page.X | default: lang.pages.X | default: "<English literal>"`. Previously the layout dropped straight to the English literal when no `page.*` override was set, and the template's `index.md` shipped with English page-overrides that shadowed the i18n for every existing user with `telar_language: es`
+
+- **Empty-state messages and IIIF URL warning hardcoded in English**: `_layouts/index.html`, `_layouts/objects-index.html`, `_layouts/glossary-index.html`, and `_includes/iiif-url-warning.html` now reference `lang.empty_states.*` and `lang.errors.iiif_mismatch.*` keys that were already defined in both language files but never used. Spanish-language sites now show empty-state guidance and the IIIF mismatch troubleshooting modal in Spanish
+
+- **JS thumbnail fallback strings hardcoded in English**: `_layouts/index.html` and `_layouts/objects-index.html` now inject `TelarI18n` and `TelarI18nIIIF` constants from the lang values, so the "Failed to load" and "No image" placeholders displayed when a thumbnail fails appear in the site's active language
+
+- **Empty-state messages pointed at the wrong content directory**: empty-state guidance previously told users to add story/object/glossary files to `_stories/`, `_objects/`, or `_glossary/`. Those directories are auto-generated; the canonical user-content paths are under `telar-content/spreadsheets/` and `telar-content/texts/glossary/`. The lang values had the correct paths; wiring them up fixed both the i18n bug and the misleading guidance
+
+- **Migration script language detection for Spanish sites**: `BaseMigration._detect_language()` was looking for `telar_language` nested under the `telar:` block in `_config.yml`, but the key has always been a top-level key. Every Spanish-language site fell through to the English default for migration manual steps. The base class now reads the correct top-level key, so Spanish sites now get the Spanish-language manual steps in `UPGRADE_SUMMARY.md` and (in v1.3.0 specifically) the conditional `acerca.md` creation guard sees the correct language
+
+### Added
+
+- **Sister-file localization for user pages** (`telar-content/texts/pages/`): `scripts/generate_collections.py` now detects markdown files with frontmatter `localized_for: <canonical>.md` and `language: <code>`. When `site.telar_language` matches the sister's `language`, the build uses the sister's content but writes output under the canonical filename — so `/about/` resolves to the right language without URL duplication. The v1.3.0 template ships with `acerca.md` as the Spanish sister of `about.md`; users can add siblings for other languages following the same convention
+
+- **`lang.index_page.welcome`** key carrying the homepage welcome content as a multi-line markdown block scalar in both EN and ES. The default `index.md` body now renders `{{ lang.index_page.welcome | markdownify }}` with a bilingual EN/ES override comment explaining how site owners replace it with their own content
+
+- **`lang.pages.glossary_intro`** key for the glossary page intro sentence, paired with EN and ES values. `pages/glossary.md` body now references this key
+
+- **`lang.errors.iiif_mismatch.local_fix_check_config`** and **`local_fix_run_with_note`**: two missing keys completing the IIIF URL warning's local-development fallback section
+
+- **Migration script `v121_to_v130.py` and matching `migration.json` manifest**: conditional content cleanup that removes the three stale `index.md` frontmatter keys and replaces user-content bodies (welcome, glossary, objects, about) with the v1.3.0 lang-key templates only when a SHA-256 hash check confirms the file is byte-for-byte identical to the v1.2.1 default. Any user customisation preserves the file untouched. For sites with `telar_language: es` whose `about.md` is unchanged from the v1.2.1 default, the migration also creates `acerca.md` automatically so the site immediately renders Spanish content at `/about/`. Sites with a customised `about.md` skip this — otherwise the new sister file would shadow the customisation
+
+### Changed
+
+- **Default content of welcome and about pages refreshed** to reflect current Telar capabilities. Both now name both Telar modes (digital storytelling and publishing small digital collections), name multimedia coverage (IIIF images, video, audio, narrative text, contextual layers), present the three setup paths (Telar Compositor, GitHub template + Sheets, hands-on local), and link to the Telar Compositor. Previous content described Telar as it was around v0.7 (single-mode storytelling, GitHub template only, no audio/video, no Compositor)
+
+- **`pages/glossary.md`, `pages/objects.md`, `index.md`** rewritten to render via lang keys rather than hardcoded English. Each file carries a bilingual EN/ES HTML override comment explaining how to replace the default with custom content. The pattern uses `{% assign lang = site.data.languages[site.telar_language] | default: site.data.languages.en %}` at the top of the page (the layout's own `lang` assignment isn't visible to the page body, which Jekyll renders before wrapping in the layout)
+
+- **`telar-content/texts/pages/about.md`** rewritten with the refreshed copy plus a sentence in the Customize alert documenting the sister-file convention for site owners adding additional languages
+
+### Removed
+
+- **Stale `lang.pages.home_title` key** from both `en.yml` and `es.yml`. Defined since v1.0.0-beta but never referenced from any layout, include, or script
+
+## [1.2.1] - 2026-05-08
 
 Patch release with a demo content fetch fix and project metadata additions.
 
