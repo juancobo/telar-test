@@ -8,7 +8,7 @@ url: "https://juancobo.com"
 baseurl: "/telar-test"
 author: ""
 email: ""
-telar_theme: "trama" # Options: trama, paisajes, neogranadina, santa-barbara, austin, or custom
+telar_theme: "trama"
 logo: ""
 telar_language: en
 collection_mode: true
@@ -18,7 +18,7 @@ story_interface:
   show_on_homepage: true # Set to false to hide stories section from homepage (stories still accessible via direct URL)
   show_story_steps: true # Set to false to hide "Step X" overlay in stories
   show_object_credits: true # Set to true to display object credits badge (bottom-left corner, dismissable)
-  include_demo_content: true # Fetch demo stories from content.telar.org. Switch this off to hide demo stories and their content.
+  include_demo_content: false # Fetch demo stories from content.telar.org. Switch this off to hide demo stories and their content.
 
 # Collection Interface Settings
 collection_interface:
