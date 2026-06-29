@@ -4,7 +4,25 @@ All notable changes to Telar will be documented in this file.
 
 ## [Unreleased]
 
-## [1.5.2] - 2026-06-12
+## [1.5.3] - 2026-06-23
+
+Internationalization fix release. Built-in interface text that still showed in English on Spanish-language sites (`telar_language: es`) now follows the site language. Display only — no content, schema, or configuration changes. Upgrade in place or simply redeploy.
+
+### Fixed
+
+- **Interface text now follows the site language.** Several built-in strings were hardcoded in English and stayed untranslated on Spanish sites: the "Back to Collection" and "Back to Glossary" links, the coordinate tool button with its Copy X / Y / Zoom and copy-manifest tooltips, the "Image Viewer Unavailable" alerts, the Google Sheets and theme configuration-error banners, the thumbnail "Loading..." placeholders, and the footer credit line. They now read from the language pack and follow `telar_language`.
+- **Objects and glossary headings now translated.** The objects and glossary page headings, and the Medium/Genre and media-type filter labels on the objects page, now follow the site language instead of showing in English.
+- **Duplicate browser-tab title on translated pages.** Translated pages emitted two `<title>` tags, and the second (added by the SEO plugin) was always English. Each page now has a single, language-aware title. The home, objects, and glossary browser-tab titles follow the site language through a new optional `title_key` field (see Migration).
+
+### Changed
+
+- **Objects page wording (English sites).** The objects page now takes its heading and browser-tab title from the language pack: the browser-tab title reads "Objects" (was "Objects in the Stories") and the page heading reads "See the objects behind the stories". Spanish sites already used these strings.
+
+### Notes
+
+- Social-share preview titles (`og:title` / `twitter:title`) still come from the static English page title and remain English on translated sites. The SEO plugin binds them to page front matter and cannot suppress just the social title; this is a known, separate limitation.
+
+## [1.5.2] - 2026-06-13
 
 Small fix release for the validation warning banners. Display only — no content changes and no manual steps. Upgrade in place or simply redeploy.
 
@@ -13,6 +31,10 @@ Small fix release for the validation warning banners. Display only — no conten
 - **Glossary warning message.** When a story references a glossary term that doesn't exist, the warning showed a literal `{{ file_path }}` placeholder and pointed only to `telar-content/texts/glossary/`. It now names the missing term cleanly and points to your glossary spreadsheet as well as the markdown folder.
 - **Story banner heading shown twice.** The warning banner on a story's intro card repeated the same line as both its heading and its description; it now has a proper heading.
 - **Homepage warning banners now translated.** The "Object configuration issues detected" and "Story configuration issues detected" banners on the homepage (headings and the "Navigate to ... to see more details." line) were hardcoded in English; they now follow the site language.
+
+### Dependencies
+
+- Routine dependency updates: `lenis`, `esbuild`, `vitest`, `@vimeo/player` (npm); `cryptography`, `jinja2`, `pillow-heif`, `playwright`, `pyyaml` (Python); `ruby/setup-ruby` (CI). No behavior change.
 
 ### Notes
 
