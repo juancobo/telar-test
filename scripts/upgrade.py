@@ -21,7 +21,7 @@ UPGRADE_SUMMARY.md file listing every automated change made and any
 manual steps the user still needs to complete. The --dry-run flag
 previews what would happen without making changes.
 
-Version: v1.5.3
+Version: v1.6.2
 
 Usage:
     python scripts/upgrade.py              # Normal upgrade
@@ -33,6 +33,7 @@ import sys
 import json
 import yaml
 import argparse
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 # Add scripts directory to path for imports
@@ -42,7 +43,10 @@ from migrations.base import (
     BaseMigration, ChangeRecord, ChangeStatus, UPGRADE_STATE_FILE,
     apply_config_version,
 )
-from migrations.messages import get_message
+from migrations.messages import get_message, get_file_count_suffix
+# Each migration is registered in three hand-synced places: this import block,
+# LATEST_VERSION, and the MIGRATIONS list below. All three must agree — there
+# is no auto-discovery (migrations/__init__.py is deliberately empty).
 from migrations.v020_to_v030 import Migration020to030
 from migrations.v030_to_v031 import Migration030to031
 from migrations.v031_to_v032 import Migration031to032
@@ -76,12 +80,16 @@ from migrations.v150_to_v151 import Migration150to151
 from migrations.v151_to_v152 import Migration151to152
 from migrations.v152_to_v153 import Migration152to153
 from migrations.v153_to_v154 import Migration153to154
+from migrations.v154_to_v160 import Migration154to160
+from migrations.v160_to_v161 import Migration160to161
+from migrations.v161_to_v162 import Migration161to162
 
 
-# Latest version
-LATEST_VERSION = "1.5.4"
+# Latest version — must agree with the import block above and MIGRATIONS below
+LATEST_VERSION = "1.6.2"
 
-# All available migrations in order
+# All available migrations in order — must agree with the import block and
+# LATEST_VERSION above (three hand-synced places, no auto-discovery)
 MIGRATIONS = [
     Migration020to030,
     Migration030to031,
@@ -116,6 +124,9 @@ MIGRATIONS = [
     Migration151to152,
     Migration152to153,
     Migration153to154,
+    Migration154to160,
+    Migration160to161,
+    Migration161to162,
 ]
 
 
@@ -335,6 +346,7 @@ def generate_checklist(
     from_version: str,
     to_version: str,
     soft_warnings: Optional[List[str]] = None,
+    lang: str = 'en',
 ) -> str:
     """
     Generate UPGRADE_SUMMARY.md content (without YAML frontmatter).
@@ -351,6 +363,8 @@ def generate_checklist(
         to_version: Target version
         soft_warnings: Non-fatal warnings (e.g. IIIF tile regeneration) to
             surface visibly rather than bury.
+        lang: Language code for the summary text ('en' or 'es'), from the
+            site's telar_language setting.
 
     Returns:
         Markdown content for summary
@@ -367,71 +381,67 @@ def generate_checklist(
     # Categorize applied changes
     categorized = _categorize_changes(applied)
 
+    summary_title = get_message(lang, 'summary_title')
     checklist = f"""---
 layout: default
-title: Upgrade Summary
+title: {summary_title}
 ---
 
-## Upgrade Summary
-- **From:** {from_version}
-- **To:** {to_version}
-- **Date:** {_get_date()}
-- **Automated changes:** {len(applied)}
-- **Manual steps:** {len(manual_steps)}
+## {summary_title}
+- **{get_message(lang, 'summary_from')}:** {from_version}
+- **{get_message(lang, 'summary_to')}:** {to_version}
+- **{get_message(lang, 'summary_date')}:** {_get_date()}
+- **{get_message(lang, 'summary_automated_changes')}:** {len(applied)}
+- **{get_message(lang, 'summary_manual_steps')}:** {len(manual_steps)}
 """
     if failed:
-        checklist += f"- **Failed / needs attention:** {len(failed)}\n"
-    checklist += "\n## Automated Changes Applied\n\n"
+        checklist += f"- **{get_message(lang, 'summary_failed_count')}:** {len(failed)}\n"
+    checklist += f"\n## {get_message(lang, 'automated_changes_applied')}\n\n"
 
     # Output changes by category
     for category, changes in categorized.items():
-        checklist += f"### {category} ({len(changes)} file{'s' if len(changes) != 1 else ''})\n\n"
+        category_label = get_message(lang, 'category_' + category.lower())
+        file_suffix = get_file_count_suffix(lang, len(changes))
+        checklist += f"### {category_label} ({len(changes)} {file_suffix})\n\n"
         for change in changes:
             checklist += f"- [x] {change}\n"
         checklist += "\n"
 
     # Failures are never ticked and never counted as automated changes.
     if failed:
-        checklist += "## Failed / Needs Manual Attention\n\n"
-        checklist += (
-            "The following changes did not complete automatically. The site "
-            "was **not** upgraded to the new version. Resolve these (usually a "
-            "transient network problem) and run the upgrade again.\n\n"
-        )
+        checklist += f"## {get_message(lang, 'failed_needs_attention')}\n\n"
+        checklist += get_message(lang, 'failed_section_body') + "\n\n"
         for record in failed:
             checklist += f"- [ ] {record.description}\n"
         checklist += "\n"
 
     if soft_warnings:
-        checklist += "## Completed With Warnings\n\n"
-        checklist += (
-            "These steps are non-fatal and did not block the upgrade, but you "
-            "should check them:\n\n"
-        )
+        checklist += f"## {get_message(lang, 'completed_with_warnings')}\n\n"
+        checklist += get_message(lang, 'warnings_section_body') + "\n\n"
         for warning in soft_warnings:
             checklist += f"- {warning}\n"
         checklist += "\n"
 
     if manual_steps:
-        checklist += f"""## Manual Steps Required
+        checklist += f"""## {get_message(lang, 'manual_steps_required')}
 
-Please complete these after merging:
+{get_message(lang, 'complete_after_merge')}
 
 """
         for i, step in enumerate(manual_steps, 1):
             checklist += f"{i}. {step['description']}"
             if 'doc_url' in step:
-                checklist += f" ([guide]({step['doc_url']}))"
+                checklist += f" ([{get_message(lang, 'guide')}]({step['doc_url']}))"
             checklist += "\n"
     else:
-        checklist += "## No Manual Steps Required\n\nAll changes have been automated!\n"
+        checklist += f"## {get_message(lang, 'no_manual_steps')}\n\n{get_message(lang, 'all_automated')}\n"
 
-    checklist += """
-## Resources
+    checklist += f"""
+## {get_message(lang, 'resources')}
 
-- [Full Documentation](https://telar.org/docs)
-- [CHANGELOG](https://github.com/UCSB-AMPLab/telar/blob/main/CHANGELOG.md)
-- [Report Issues](https://github.com/UCSB-AMPLab/telar/issues)
+- [{get_message(lang, 'full_documentation')}](https://telar.org/docs)
+- [{get_message(lang, 'changelog')}](https://github.com/UCSB-AMPLab/telar/blob/main/CHANGELOG.md)
+- [{get_message(lang, 'report_issues')}](https://github.com/UCSB-AMPLab/telar/issues)
 """
 
     return checklist
@@ -448,6 +458,9 @@ def _regenerate_data_files(repo_root: str) -> Tuple[bool, bool]:
     is stale and the upgrade must not be stamped as complete. generate_iiif is
     SOFT: tile generation can fail (e.g. missing source images) without
     invalidating the upgrade, and is surfaced as a warning instead.
+
+    Precondition: the modules in _REGENERATION_IMPORTS must be importable in
+    this interpreter — main() runs _ensure_regeneration_dependencies() first.
 
     Args:
         repo_root: Path to repository root
@@ -471,7 +484,7 @@ def _regenerate_data_files(repo_root: str) -> Tuple[bool, bool]:
     try:
         # Run csv_to_json.py (generates objects.json with validation)
         result = subprocess.run(
-            ['python3', csv_to_json],
+            [sys.executable, csv_to_json],
             cwd=repo_root,
             capture_output=True,
             text=True,
@@ -485,7 +498,7 @@ def _regenerate_data_files(repo_root: str) -> Tuple[bool, bool]:
         # Run generate_collections.py (generates story/glossary JSON with validation)
         if os.path.exists(generate_collections):
             result = subprocess.run(
-                ['python3', generate_collections],
+                [sys.executable, generate_collections],
                 cwd=repo_root,
                 capture_output=True,
                 text=True,
@@ -502,7 +515,7 @@ def _regenerate_data_files(repo_root: str) -> Tuple[bool, bool]:
         generate_iiif = os.path.join(scripts_dir, 'generate_iiif.py')
         if os.path.exists(generate_iiif):
             result = subprocess.run(
-                ['python3', generate_iiif],
+                [sys.executable, generate_iiif],
                 cwd=repo_root,
                 capture_output=True,
                 text=True,
@@ -521,6 +534,88 @@ def _regenerate_data_files(repo_root: str) -> Tuple[bool, bool]:
     except Exception as e:
         print(f"  ⚠️  Warning: Data regeneration failed: {e}")
         return (False, True)
+
+
+# Import names that data regeneration transitively requires. csv_to_json.py and
+# generate_collections.py load the scripts/telar package, which eagerly imports
+# these; regeneration cannot run unless every one resolves. These are IMPORT
+# names, not pip package names — requirements.txt lists the packages that
+# provide them (PIL comes from Pillow, yaml from pyyaml).
+_REGENERATION_IMPORTS = ["markdown", "PIL", "jinja2", "cryptography", "yaml", "pandas"]
+
+
+def _missing_regeneration_imports() -> List[str]:
+    """Return the subset of _REGENERATION_IMPORTS that cannot currently be imported."""
+    import importlib.util
+    return [name for name in _REGENERATION_IMPORTS
+            if importlib.util.find_spec(name) is None]
+
+
+def _ensure_regeneration_dependencies(repo_root: str) -> Tuple[bool, List[str]]:
+    """Ensure the modules data regeneration needs are importable.
+
+    _regenerate_data_files() subprocess-runs csv_to_json.py and
+    generate_collections.py, which transitively import the modules in
+    _REGENERATION_IMPORTS through the scripts/telar package. This script is
+    fetched fresh from the release tooling tarball on every run, so it ensures
+    its own dependencies here rather than relying on the site's CI workflow — a
+    copy the migrations cannot update.
+
+    When every required module already resolves, this returns immediately with no
+    pip call. Otherwise it installs from a requirements manifest, preferring the
+    tooling copy shipped beside this script (the tarball places requirements.txt
+    as a sibling of scripts/) and falling back to the site's own requirements.txt.
+
+    Args:
+        repo_root: Path to the site being upgraded (source of the fallback manifest).
+
+    Returns:
+        (ok, missing). ok is True when every required module is importable after
+        the ensure step. missing lists the import names still unresolved.
+    """
+    import importlib
+    import subprocess
+
+    missing = _missing_regeneration_imports()
+    if not missing:
+        return (True, [])
+
+    # Manifest search order: the tooling copy beside this script first (tarball
+    # layout: requirements.txt sibling of scripts/), then the site's own copy —
+    # the fallback that is the only manifest present when the tooling tarball
+    # carries no requirements.txt.
+    candidates = [
+        Path(__file__).resolve().parent.parent / 'requirements.txt',
+        Path(repo_root) / 'requirements.txt',
+    ]
+    manifest = next((p for p in candidates if p.is_file()), None)
+
+    if manifest is None:
+        print(f"  ⚠️  Warning: cannot install regeneration dependencies "
+              f"({', '.join(missing)}): no requirements.txt found beside the "
+              f"upgrade script or in the site.")
+        return (False, missing)
+
+    print(f"  Installing regeneration dependencies from {manifest} ...")
+    try:
+        result = subprocess.run(
+            [sys.executable, '-m', 'pip', 'install', '-r', str(manifest)],
+            capture_output=True,
+            text=True,
+            # pip resolves over the network; without a bound, a hung fetch
+            # stalls the CI job until the runner's own multi-hour timeout.
+            timeout=600,
+        )
+        if result.returncode != 0:
+            stderr_tail = '\n'.join((result.stderr or '').strip().splitlines()[-10:])
+            print(f"  ⚠️  Warning: pip install from {manifest} failed:\n{stderr_tail}")
+    except subprocess.TimeoutExpired:
+        print(f"  ⚠️  Warning: pip install from {manifest} timed out")
+
+    # A fresh install may not be visible to find_spec until import caches are cleared.
+    importlib.invalidate_caches()
+    still_missing = _missing_regeneration_imports()
+    return (not still_missing, still_missing)
 
 
 def _update_config_version(repo_root: str, new_version: str, new_date: str) -> bool:
@@ -608,7 +703,8 @@ def _write_failure_summary(repo_root: str, migrations: List[BaseMigration],
                            all_changes: List[ChangeRecord], from_version: str) -> None:
     """Write UPGRADE_SUMMARY.md and the state marker for a failed upgrade."""
     failed = [r for r in all_changes if r.status == ChangeStatus.FAILED]
-    summary = generate_checklist(migrations, all_changes, from_version, LATEST_VERSION)
+    summary = generate_checklist(migrations, all_changes, from_version, LATEST_VERSION,
+                                 lang=_get_lang(repo_root))
     summary_path = os.path.join(repo_root, 'UPGRADE_SUMMARY.md')
     with open(summary_path, 'w') as f:
         f.write(summary)
@@ -714,6 +810,27 @@ def main():
 
     # Regenerate data files and IIIF tiles. csv/collections failure is HARD.
     print('\n' + get_message(lang, 'regenerating_data'))
+
+    # Regeneration subprocess-runs scripts that import the scripts/telar package;
+    # its dependencies must be importable first or those scripts fail closed.
+    # Treat still-missing modules as the same HARD failure as a regeneration error:
+    # returning here leaves the version unstamped so a re-run retries.
+    deps_ok, missing_deps = _ensure_regeneration_dependencies(repo_root)
+    if not deps_ok:
+        print('\n' + get_message(lang, 'upgrade_failed_data'))
+        print(get_message(lang, 'upgrade_not_applied'))
+        all_changes.append(ChangeRecord(
+            description="Data regeneration dependencies are missing ("
+                        + ", ".join(missing_deps) + "). Data regeneration cannot "
+                        "run without them, so the site was not upgraded. Install the "
+                        "packages listed in requirements.txt and re-run the upgrade.",
+            status=ChangeStatus.FAILED,
+            severity="hard",
+        ))
+        _write_failure_summary(repo_root, migrations, all_changes, from_version)
+        print(get_message(lang, 'see_summary_details'))
+        return EXIT_HARD_FAILURE
+
     csv_ok, iiif_ok = _regenerate_data_files(repo_root)
     if not csv_ok:
         print('\n' + get_message(lang, 'upgrade_failed_data'))
@@ -746,7 +863,7 @@ def main():
 
     # Generate and write summary
     summary = generate_checklist(migrations, all_changes, from_version, LATEST_VERSION,
-                                 soft_warnings=soft_warnings)
+                                 soft_warnings=soft_warnings, lang=lang)
     summary_path = os.path.join(repo_root, 'UPGRADE_SUMMARY.md')
     with open(summary_path, 'w') as f:
         f.write(summary)
