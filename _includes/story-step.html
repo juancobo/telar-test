@@ -12,7 +12,7 @@
   (the step's position) plus the camera target on the object — object_id, x, y,
   zoom, region, and the media-specific page / clip_start / clip_end / loop / alt_text,
   each emitted only when present. question and answer carry the prose (answer is
-  HTML the build rendered, printed as it is; answer_long sets it in the smaller type). viewer_warning, when set, surfaces a banner pointing
+  run through markdownify). viewer_warning, when set, surfaces a banner pointing
   the author at objects.csv — shown when the named object or its IIIF manifest is
   missing. The Layer 1 trigger renders only when the step supplies layer1_title or
   layer1_text, labelled by layer1button (falling back to "Learn more"); the Layer 2
@@ -47,12 +47,12 @@ here. English fallback keeps the strings populated if the language is unset.{%- 
     <h2 class="step-question">{{ include.question }}</h2>
 
     <!-- Answer (Main Content) -->
-    <div class="step-answer{% if include.answer_long %} step-answer--long{% endif %}">
-      {{ include.answer }}
+    <div class="step-answer">
+      {{ include.answer | markdownify }}
     </div>
 
     <!-- Viewer Warning (if object or IIIF manifest is missing) -->
-    {% if include.viewer_warning and include.viewer_warning != "" and site['development-features'].hide_warnings != true %}
+    {% if include.viewer_warning and include.viewer_warning != "" %}
     <div class="alert alert-warning telar-alert mt-3" role="alert">
       <strong>{{ lang.errors.image_viewer_unavailable_alt | default: "⚠️ Image viewer unavailable" }}</strong>
       <p class="mb-0 mt-2">

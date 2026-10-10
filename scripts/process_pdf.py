@@ -42,7 +42,7 @@ This script is designed to be called from generate_iiif.py when it
 detects a .pdf source file, but it can also be run standalone for
 testing.
 
-Version: v1.7.0
+Version: v1.6.0
 """
 
 import json
@@ -67,12 +67,9 @@ def render_pdf_pages(pdf_path, output_dir, dpi=200):
         List of (page_number, image_path, width, height) tuples.
         Page numbers are 1-indexed.
     """
-    # `pymupdf` is the library's own name for itself; the `fitz` alias it
-    # shipped under is deprecated, and importing by it prints a warning into
-    # the build output of every site that tiles a PDF.
-    import pymupdf
+    import fitz
 
-    doc = pymupdf.open(str(pdf_path))
+    doc = fitz.open(str(pdf_path))
     pages_info = []
 
     MAX_SIDE_PX = 10_000  # ceiling on the longest rendered side, guards against OOM
@@ -89,7 +86,7 @@ def render_pdf_pages(pdf_path, output_dir, dpi=200):
             print(f"  [WARNING] Page {page_num + 1} is very large; clamping render "
                   f"scale to keep the longest side under {MAX_SIDE_PX}px")
             scale = max_scale
-        matrix = pymupdf.Matrix(scale, scale)
+        matrix = fitz.Matrix(scale, scale)
         pixmap = page.get_pixmap(matrix=matrix)
 
         # Save as JPEG (1-indexed page numbers)
@@ -314,13 +311,11 @@ def process_pdf_object(pdf_path, output_dir, object_id, base_url):
             if vips_props.exists():
                 vips_props.unlink()
 
-            # patch_info_json's sizes array is built by listing full/ on
-            # disk, so full/ must be complete — every scaleFactor
-            # derivative written — before info.json is patched.
-            generate_full_max(image_path, page_dir)
-
-            # Post-process: patch info.json with page-specific URL and sizes
+            # Post-process: patch info.json with page-specific URL
             patch_info_json(page_dir, f"{object_id}/{page_id}", base_url)
+
+            # Generate full/max/0/default.jpg
+            generate_full_max(image_path, page_dir)
 
             # Create per-page single-canvas manifest
             _create_page_manifest(page_dir, object_id, page_number, width, height, base_url, metadata)

@@ -18,15 +18,11 @@
  *
  * Ported from the Telar Compositor (TypeScript types stripped; behaviour identical).
  *
- * @version v1.8.0
+ * @version v1.4.0
  */
 
 /**
- * A tile source is either a URL string, which OpenSeadragon fetches and parses
- * as a descriptor, or `{ type: 'image', url }` for a plain image that has no
- * descriptor to fetch. The two are not interchangeable.
- *
- * @typedef {{ tileSource: string | { type: 'image', url: string } }} PageInfo
+ * @typedef {{ tileSource: string }} PageInfo
  */
 
 /**
@@ -83,11 +79,8 @@ export function extractV3Pages(manifest) {
           pages.push({ tileSource: infoUrl });
           continue;
         }
-        // Last resort: a plain image, with no Image API endpoint behind it.
-        // OpenSeadragon reads a *string* tile source as a URL to a descriptor
-        // it should fetch and parse, so a bare image URL fails to open; the
-        // object form is what opens a plain image.
-        pages.push({ tileSource: { type: 'image', url: body.id } });
+        // Last resort: use the image URL directly
+        pages.push({ tileSource: body.id });
       }
     }
   } catch { /* fall through */ }
@@ -122,11 +115,9 @@ export function extractV2Pages(manifest) {
         continue;
       }
 
-      // Fallback: resource @id, a plain image with no Image API endpoint.
-      // Object form rather than a bare string, for the reason given in the v3
-      // walker above.
+      // Fallback: resource @id
       if (resource['@id'] && typeof resource['@id'] === 'string') {
-        pages.push({ tileSource: { type: 'image', url: resource['@id'] } });
+        pages.push({ tileSource: resource['@id'] });
       }
     }
   } catch { /* fall through */ }

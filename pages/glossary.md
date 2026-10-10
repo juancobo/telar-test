@@ -2,7 +2,6 @@
 layout: glossary-index
 title: Glossary
 permalink: /glossary/
-title_key: navigation.glossary
 ---
 
 {% assign lang = site.data.languages[site.telar_language] | default: site.data.languages.en %}
@@ -18,4 +17,4 @@ title_key: navigation.glossary
   y escríbelo aquí en markdown.
 -->
 
-{% include glossary-intro.html lang=lang %}
+{{ lang.pages.glossary_intro }}

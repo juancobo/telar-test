@@ -86,10 +86,6 @@ exclude:
   - README.md
   - docs/
   - scripts/
-  - telar-content/texts/
-  - tests/
-  - pytest.ini
-  - vitest.config.js
 
 # Defaults
 defaults:
@@ -120,8 +116,8 @@ show_drafts: false
 
 # Telar Settings (version information)
 telar:
-  version: "1.8.1"
-  release_date: "2026-10-09"
+  version: "1.6.2"
+  release_date: "2026-07-17"
 
 # Plugins
 plugins:

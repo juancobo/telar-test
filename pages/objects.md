@@ -2,7 +2,6 @@
 layout: objects-index
 title: Objects in the Stories
 permalink: /objects/
-title_key: navigation.objects
 ---
 
 {% assign lang = site.data.languages[site.telar_language] | default: site.data.languages.en %}
